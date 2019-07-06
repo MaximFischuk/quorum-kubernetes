@@ -1,0 +1,58 @@
+{
+  "useWhiteList": false,
+  "jdbc": {
+      "url": "jdbc:postgresql://localhost:5432/<tesseradb>",
+      "username": "<username>",
+      "password": "<password>",
+      "autoCreateTables": true
+  },
+  "serverConfigs":[
+      {
+          "app":"ThirdParty",
+          "enabled": true,
+          "serverAddress": "http://localhost:9081",
+          "communicationType" : "REST"
+      },
+      {
+          "app":"Q2T",
+          "enabled": true,
+          "serverAddress":"unix:/home/tessera/tm.ipc",
+          "communicationType" : "REST"
+      },
+      {
+          "app":"P2P",
+          "enabled": true,
+          "serverAddress":"http://localhost:9001",
+          "sslConfig": {
+              "tls": "OFF",
+              "generateKeyStoreIfNotExisted": true,
+              "serverKeyStore": "/home/tessera/server-keystore",
+              "serverKeyStorePassword": "quorum",
+              "serverTrustStore": "/home/tessera/server-truststore",
+              "serverTrustStorePassword": "quorum",
+              "serverTrustMode": "TOFU",
+              "knownClientsFile": "/home/tessera/knownClients",
+              "clientKeyStore": "/home/tessera/client-keystore",
+              "clientKeyStorePassword": "quorum",
+              "clientTrustStore": "/home/tessera/client-truststore",
+              "clientTrustStorePassword": "quorum",
+              "clientTrustMode": "TOFU",
+              "knownServersFile": "/home/tessera/knownServers"
+          },
+          "communicationType" : "REST"
+      }
+  ],
+  "peer": [
+    
+  ],
+  "keys": {
+      "passwordFile": "/etc/tessera/password.txt",
+      "keyData": [
+          {
+              "privateKeyPath": "/etc/tessera/tm.key",
+              "publicKeyPath": "/etc/tessera/tm.pub"
+          }
+      ]
+  },
+  "alwaysSendTo": []
+}

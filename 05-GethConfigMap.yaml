@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: geth-config
+  labels:
+    app: quorum-node
+data:
+  NETWORK_ID: '12345'
+  nodekey: '25c8d46944b31a39d196282d31b0b6159802e68fdab71afd132b5e315af49cb6'
+  nodeid: 'fad931b291de11c8f0587a7a417a4ace51205bc7eb2e69c28958211f1d15b8f2b92a93b802cbfd7b8b935ff87d5103cc6b99a304b7040f27704939d9b65d6e49'
+  static-nodes.json: |
+    [
+      "enode://fad931b291de11c8f0587a7a417a4ace51205bc7eb2e69c28958211f1d15b8f2b92a93b802cbfd7b8b935ff87d5103cc6b99a304b7040f27704939d9b65d6e49@10.100.10.1:21000?discport=0&raftport=22003",
+    ]

@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tessera-config
+  labels:
+    app: quorum-node
+data:
+  # password: 12345
+  tm.pub: S0eGK1bw9KhAyOEd8MOaZxQkEATYpxaCAfQDJltISiI=
+  tm.key: |
+    {
+       "type" : "argon2sbox",
+       "data" : {
+          "snonce" : "mUCNsADhBq6OqMydF6kfHebY9ouZPTxS",
+          "asalt" : "bQLztfeHGwyAv8c6CsKbZA==",
+          "sbox" : "gd6IhAn9bKDtKnW/TzK7nXtxwLYepthtrRwup/2qfY2vEp8WMIIuOoDm/yMb/evM",
+          "aopts" : {
+             "variant" : "i",
+             "iterations" : 10,
+             "memory" : 1048576,
+             "parallelism" : 4
+          }
+       }
+    }
+  config.json: |
+    {
+      "useWhiteList": false,
+      "jdbc": {
+          "url": "jdbc:postgresql://localhost:5432/tesseradb",
+          "username": "<tesseradb_user>",
+          "password": "<tesseradb_password>",
+          "autoCreateTables": true
+      },
+      "serverConfigs":[
+          {
+              "app":"ThirdParty",
+              "enabled": true,
+              "serverAddress": "http://localhost:9081",
+              "communicationType" : "REST"
+          },
+          {
+              "app":"Q2T",
+              "enabled": true,
+              "serverAddress":"unix:/home/tessera/tm.ipc",
+              "communicationType" : "REST"
+          },
+          {
+              "app":"P2P",
+              "enabled": true,
+              "serverAddress":"http://localhost:9001",
+              "communicationType" : "REST"
+          }
+      ],
+      "peer": [],
+      "keys": {
+          "passwordFile": "/etc/tessera/password.txt",
+          "keyData": [
+              {
+                  "privateKeyPath": "/etc/tessera/tm.key",
+                  "publicKeyPath": "/etc/tessera/tm.pub"
+              }
+          ]
+      },
+      "alwaysSendTo": []
+    }
+
+  password.txt: '12345'

@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: quorum-node
+  labels:
+    app: quorum-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quorum-node
+  serviceName: quorum-node
+  template:
+    metadata:
+      labels:
+        app: quorum-node
+    spec:
+      initContainers:
+        - name: geth-node-init
+          image: quorumengineering/quorum:2.2.3
+          workingDir: /home/quorum
+          command: 
+            - "./geth-init.sh"
+          volumeMounts:
+            - name: data-volume
+              mountPath: /home/quorum
+            - name: geth-init-script
+              mountPath: /home/quorum/geth-init.sh
+              subPath: geth-init.sh
+            - name: genesis
+              mountPath: /home/quorum/genesis.json
+              subPath: genesis.json
+            - name: geth-config
+              mountPath: /quorum/qdata/nodekey
+              subPath: nodekey
+      containers:
+        - name: tessera
+          image: quorumengineering/tessera:0.9
+          workingDir: /home/quorum/tessera
+          command:
+            - "java"
+            - "-cp"
+          args:
+            - "/etc/driver/postgresql-42.2.5.jar:/tessera/tessera-app.jar:."
+            - "com.quorum.tessera.Launcher"
+            - "-configfile"
+            - "/etc/tessera/config.json"
+          envFrom:
+            - configMapRef:
+                name: tessera-vault-config
+          ports:
+            - name: p2p
+              containerPort: 9001
+            - name: third-party
+              containerPort: 9081
+          volumeMounts:
+            - name: tessera-config
+              mountPath: /etc/tessera/
+            - name: data-volume
+              mountPath: /home/tessera
+            - name: jdbc-driver
+              mountPath: /etc/driver/postgresql-42.2.5.jar
+              subPath: postgresql-42.2.5.jar
+        - name: quorum
+          image: quorumengineering/quorum:2.2.3
+          workingDir: /quorum
+          env:
+            - name: PRIVATE_CONFIG
+              value: /quorum/tm.ipc
+            - name: NETWORK_ID
+              valueFrom:
+                configMapKeyRef:
+                  key: NETWORK_ID
+                  name: geth-config
+            # - name: RAFT_ID
+            #   value: '1'
+          args: [ 
+            "--nodiscover", 
+            "--verbosity", "5",
+            "--networkid", "$(NETWORK_ID)",
+            "--raft",
+            "--rpc",
+            "--rpcaddr", "0.0.0.0",
+            "--rpccorsdomain", "*",
+            "--rpcapi", "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,raft",
+            "--datadir", "./qdata",
+            "--raftport", "22003",
+            "--rpcport", "22000",
+            "--port", "21000",
+            "--ipcdisable",
+            "--emitcheckpoints"
+            # "--raftjoinexisting", "$(RAFT_ID)"
+          ]
+          ports:
+            - name: raft
+              containerPort: 22003
+            - name: peer
+              containerPort: 21000
+          volumeMounts:
+            - name: data-volume
+              mountPath: /quorum
+            - name: geth-config
+              mountPath: /quorum/qdata/static-nodes.json
+              subPath: static-nodes.json
+            - name: geth-config
+              mountPath: /quorum/qdata/nodekey
+              subPath: nodekey
+            - name: geth-config
+              mountPath: /quorum/qdata/nodeid
+              subPath: nodeid
+      volumes:
+        - name: genesis
+          configMap:
+            name: genesis
+        - name: tessera-config
+          configMap:
+            name: tessera-config
+        - name: geth-config
+          configMap:
+            name: geth-config
+        - name: geth-init-script
+          configMap:
+            name: geth-init-script
+            defaultMode: 0777
+        - name: jdbc-driver
+          configMap:
+            name: postgres-jdbc-driver
+  volumeClaimTemplates:
+    - metadata:
+        name: data-volume
+        namespace: quorum
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: quorum-storage
+        resources:
+          requests:
+            storage: 5Gi

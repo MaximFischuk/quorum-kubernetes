@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: geth-init-script
+  labels:
+    app: quorum-node
+data:
+  geth-init.sh: |
+    #!/bin/sh
+
+    if [ ! -d "./qdata/geth" ]; then
+      geth --datadir ./qdata init ./genesis.json
+    fi
